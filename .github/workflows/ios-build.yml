@@ -88,6 +88,22 @@ jobs:
           cd build
           zip -qry "啵乐漫画-1.0.0-unsigned.ipa" Payload
 
+      - name: Verify packaged app icon
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import plistlib
+          import zipfile
+
+          with zipfile.ZipFile("build/啵乐漫画-1.0.0-unsigned.ipa") as package:
+              prefix = "Payload/JMComic.app/"
+              info = plistlib.loads(package.read(prefix + "Info.plist"))
+              primary = info["CFBundleIcons"]["CFBundlePrimaryIcon"]
+              assert primary["CFBundleIconName"] == "AppIcon"
+              assert package.getinfo(prefix + "Assets.car").file_size > 0
+              print("App icon verification passed: CFBundleIconName=AppIcon")
+          PY
+
       - name: Upload unsigned IPA
         uses: actions/upload-artifact@v4
         with:
