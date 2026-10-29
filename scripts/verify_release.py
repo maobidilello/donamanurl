@@ -40,10 +40,28 @@ if symoff + nsyms * 16 > len(executable) or stroff + strsize > len(executable):
 
 local_symbols = 0
 debug_symbols = 0
+linker_markers = 0
 remaining = []
 for index in range(nsyms):
     entry_offset = symoff + index * 16
     n_strx, n_type, _, _, _ = struct.unpack_from("<IBBHQ", executable, entry_offset)
+    if n_strx < strsize:
+        end = executable.find(b"\0", stroff + n_strx, stroff + strsize)
+        name = bytes(executable[stroff + n_strx:end]).decode("utf-8", "replace")
+    else:
+        name = "<invalid string index>"
+
+    # Apple's strip preserves this ld64 compatibility marker at symbol index zero.
+    is_linker_marker = (
+        index == 0
+        and n_type == 0x3C
+        and name.startswith("radr://")
+        and name[7:].isdigit()
+    )
+    if is_linker_marker:
+        linker_markers += 1
+        continue
+
     is_debug = bool(n_type & 0xE0)  # N_STAB debugging symbols
     is_local = not n_type & 0x01  # N_EXT external/dynamic symbols must remain
     if is_debug:
@@ -51,11 +69,6 @@ for index in range(nsyms):
     if is_local:
         local_symbols += 1
     if is_debug or is_local:
-        if n_strx < strsize:
-            end = executable.find(b"\0", stroff + n_strx, stroff + strsize)
-            name = bytes(executable[stroff + n_strx:end]).decode("utf-8", "replace")
-        else:
-            name = "<invalid string index>"
         remaining.append(f"index={index},type=0x{n_type:02X},name={name!r}")
 
 if debug_symbols or local_symbols:
@@ -66,6 +79,6 @@ if debug_symbols or local_symbols:
     )
 
 print(
-    f"Release verification passed: no plain API URL; no debug/local symbols; "
-    f"{nsyms} required dynamic symbols retained"
+    f"Release verification passed: no plain API URL; no app debug/local symbols; "
+    f"{linker_markers} Apple linker marker and {nsyms - linker_markers} dynamic symbols retained"
 )
