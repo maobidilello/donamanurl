@@ -44,23 +44,13 @@ jobs:
             CODE_SIGNING_ALLOWED=NO \
             build | tee "$RUNNER_TEMP/original-build.log"
 
-      - name: Obfuscate Swift source
+      - name: Obfuscate sensitive Swift strings
         if: github.event_name == 'push' || inputs.obfuscate
         run: |
           set -euo pipefail
-          curl --fail --location --retry 3 \
-            "https://github.com/rockbruno/swiftshield/releases/download/4.2.1/swiftshield.zip" \
-            --output "$RUNNER_TEMP/swiftshield.zip"
-          ditto -x -k "$RUNNER_TEMP/swiftshield.zip" "$RUNNER_TEMP/swiftshield-bin"
-          chmod +x "$RUNNER_TEMP/swiftshield-bin/bin/swiftshield"
-          "$RUNNER_TEMP/swiftshield-bin/bin/swiftshield" obfuscate \
-            --project-file "$PROJECT" \
-            --scheme "$SCHEME" \
-            --verbose | tee "$RUNNER_TEMP/obfuscation.log"
-          test -s swiftshield-output/conversionMap.txt
+          python3 scripts/obfuscate_strings.py | tee "$RUNNER_TEMP/obfuscation.log"
           mkdir -p artifacts/obfuscated-source
           cp JMComic/*.swift artifacts/obfuscated-source/
-          cp swiftshield-output/conversionMap.txt artifacts/conversionMap.txt
 
       - name: Build final source
         run: |
@@ -77,6 +67,9 @@ jobs:
             -destination 'generic/platform=iOS' \
             -derivedDataPath "$BUILD_DERIVED" \
             CODE_SIGNING_ALLOWED=NO \
+            STRIP_INSTALLED_PRODUCT=YES \
+            STRIP_STYLE=all \
+            DEAD_CODE_STRIPPING=YES \
             build | tee "$RUNNER_TEMP/final-build.log"
 
       - name: Package unsigned IPA
@@ -95,11 +88,11 @@ jobs:
           if-no-files-found: error
           retention-days: 14
 
-      - name: Upload obfuscation map and source
+      - name: Upload obfuscation report and source
         if: github.event_name == 'push' || inputs.obfuscate
         uses: actions/upload-artifact@v4
         with:
-          name: JMComic-obfuscation-map-and-source
+          name: JMComic-obfuscation-report-and-source
           path: artifacts/
           if-no-files-found: error
           retention-days: 90
