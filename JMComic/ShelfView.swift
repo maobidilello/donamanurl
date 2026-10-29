@@ -41,9 +41,8 @@ struct ShelfView: View {
             .background(Color.appBackground)
             .navigationTitle("书架")
             .toolbar {
-                if !state.favorites.isEmpty {
-                    Button(editing ? "完成" : "管理") { editing.toggle() }
-                }
+                Button(editing ? "完成" : "管理") { editing.toggle() }
+                    .disabled(state.favorites.isEmpty)
             }
             .background(ComicDetailNavigation(path: $path))
         }
