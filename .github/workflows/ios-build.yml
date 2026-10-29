@@ -56,10 +56,11 @@ jobs:
         run: |
           set -euo pipefail
           if [ "${{ github.event_name }}" = "push" ] || [ "${{ inputs.obfuscate }}" = "true" ]; then
-            echo "BUILD_DERIVED=$RUNNER_TEMP/obfuscated-derived" >> "$GITHUB_ENV"
+            BUILD_DERIVED="$RUNNER_TEMP/obfuscated-derived"
           else
-            echo "BUILD_DERIVED=$RUNNER_TEMP/original-derived" >> "$GITHUB_ENV"
+            BUILD_DERIVED="$RUNNER_TEMP/original-derived"
           fi
+          echo "BUILD_DERIVED=$BUILD_DERIVED" >> "$GITHUB_ENV"
           xcodebuild \
             -project "$PROJECT" \
             -scheme "$SCHEME" \
