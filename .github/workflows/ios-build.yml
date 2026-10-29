@@ -52,11 +52,11 @@ jobs:
             "https://github.com/rockbruno/swiftshield/releases/download/4.2.1/swiftshield.zip" \
             --output "$RUNNER_TEMP/swiftshield.zip"
           ditto -x -k "$RUNNER_TEMP/swiftshield.zip" "$RUNNER_TEMP/swiftshield-bin"
-          chmod +x "$RUNNER_TEMP/swiftshield-bin/swiftshield"
-          "$RUNNER_TEMP/swiftshield-bin/swiftshield" obfuscate \
+          chmod +x "$RUNNER_TEMP/swiftshield-bin/bin/swiftshield"
+          "$RUNNER_TEMP/swiftshield-bin/bin/swiftshield" obfuscate \
             --project-file "$PROJECT" \
             --scheme "$SCHEME" \
-            --verbose
+            --verbose | tee "$RUNNER_TEMP/obfuscation.log"
           test -s swiftshield-output/conversionMap.txt
           mkdir -p artifacts/obfuscated-source
           cp JMComic/*.swift artifacts/obfuscated-source/
@@ -111,6 +111,7 @@ jobs:
           name: JMComic-build-logs
           path: |
             ${{ runner.temp }}/original-build.log
+            ${{ runner.temp }}/obfuscation.log
             ${{ runner.temp }}/final-build.log
           if-no-files-found: warn
           retention-days: 7
