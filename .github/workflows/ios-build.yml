@@ -1,0 +1,116 @@
+name: iOS Obfuscated Build
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      obfuscate:
+        description: "Obfuscate Swift source before the final build"
+        required: true
+        default: true
+        type: boolean
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: macos-15
+    timeout-minutes: 45
+    env:
+      PROJECT: JMComic.xcodeproj
+      SCHEME: JMComic
+      APP_NAME: JMComic
+
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Select Xcode
+        uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: latest-stable
+
+      - name: Build original source
+        run: |
+          set -euo pipefail
+          xcodebuild \
+            -project "$PROJECT" \
+            -scheme "$SCHEME" \
+            -configuration Release \
+            -destination 'generic/platform=iOS' \
+            -derivedDataPath "$RUNNER_TEMP/original-derived" \
+            CODE_SIGNING_ALLOWED=NO \
+            build | tee "$RUNNER_TEMP/original-build.log"
+
+      - name: Obfuscate Swift source
+        if: github.event_name == 'push' || inputs.obfuscate
+        run: |
+          set -euo pipefail
+          curl --fail --location --retry 3 \
+            "https://github.com/rockbruno/swiftshield/releases/download/4.2.1/swiftshield.zip" \
+            --output "$RUNNER_TEMP/swiftshield.zip"
+          ditto -x -k "$RUNNER_TEMP/swiftshield.zip" "$RUNNER_TEMP/swiftshield-bin"
+          chmod +x "$RUNNER_TEMP/swiftshield-bin/swiftshield"
+          "$RUNNER_TEMP/swiftshield-bin/swiftshield" obfuscate \
+            --project-file "$PROJECT" \
+            --scheme "$SCHEME" \
+            --verbose
+          test -s swiftshield-output/conversionMap.txt
+          mkdir -p artifacts/obfuscated-source
+          cp JMComic/*.swift artifacts/obfuscated-source/
+          cp swiftshield-output/conversionMap.txt artifacts/conversionMap.txt
+
+      - name: Build final source
+        run: |
+          set -euo pipefail
+          if [ "${{ github.event_name }}" = "push" ] || [ "${{ inputs.obfuscate }}" = "true" ]; then
+            echo "BUILD_DERIVED=$RUNNER_TEMP/obfuscated-derived" >> "$GITHUB_ENV"
+          else
+            echo "BUILD_DERIVED=$RUNNER_TEMP/original-derived" >> "$GITHUB_ENV"
+          fi
+          xcodebuild \
+            -project "$PROJECT" \
+            -scheme "$SCHEME" \
+            -configuration Release \
+            -destination 'generic/platform=iOS' \
+            -derivedDataPath "$BUILD_DERIVED" \
+            CODE_SIGNING_ALLOWED=NO \
+            build | tee "$RUNNER_TEMP/final-build.log"
+
+      - name: Package unsigned IPA
+        run: |
+          set -euo pipefail
+          mkdir -p build/Payload
+          cp -R "$BUILD_DERIVED/Build/Products/Release-iphoneos/$APP_NAME.app" build/Payload/
+          cd build
+          zip -qry "啵乐漫画-1.0.0-unsigned.ipa" Payload
+
+      - name: Upload unsigned IPA
+        uses: actions/upload-artifact@v4
+        with:
+          name: JMComic-unsigned-ipa
+          path: build/*.ipa
+          if-no-files-found: error
+          retention-days: 14
+
+      - name: Upload obfuscation map and source
+        if: github.event_name == 'push' || inputs.obfuscate
+        uses: actions/upload-artifact@v4
+        with:
+          name: JMComic-obfuscation-map-and-source
+          path: artifacts/
+          if-no-files-found: error
+          retention-days: 90
+
+      - name: Upload failure logs
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: JMComic-build-logs
+          path: |
+            ${{ runner.temp }}/original-build.log
+            ${{ runner.temp }}/final-build.log
+          if-no-files-found: warn
+          retention-days: 7
