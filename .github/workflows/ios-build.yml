@@ -73,6 +73,13 @@ jobs:
             DEAD_CODE_STRIPPING=YES \
             build | tee "$RUNNER_TEMP/final-build.log"
 
+      - name: Strip and verify final executable
+        run: |
+          set -euo pipefail
+          EXECUTABLE="$BUILD_DERIVED/Build/Products/Release-iphoneos/$APP_NAME.app/$APP_NAME"
+          xcrun strip -s "$EXECUTABLE"
+          python3 scripts/verify_release.py "$EXECUTABLE"
+
       - name: Package unsigned IPA
         run: |
           set -euo pipefail
