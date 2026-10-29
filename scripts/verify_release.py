@@ -21,7 +21,7 @@ if magic != 0xFEEDFACF:
     raise SystemExit("Expected a 64-bit little-endian Mach-O executable")
 
 offset = 32
-symtab_nsyms = None
+symtab = None
 for _ in range(ncmds):
     if offset + 8 > len(executable):
         raise SystemExit("Mach-O load commands exceed the executable size")
@@ -29,10 +29,31 @@ for _ in range(ncmds):
     if cmdsize < 8 or offset + cmdsize > len(executable):
         raise SystemExit("Invalid Mach-O load command size")
     if cmd == 0x2:  # LC_SYMTAB
-        _, _, _, symtab_nsyms, _, _ = struct.unpack_from("<IIIIII", executable, offset)
+        symtab = struct.unpack_from("<IIIIII", executable, offset)
     offset += cmdsize
 
-if symtab_nsyms is None or symtab_nsyms != 0:
-    raise SystemExit(f"Symbol table was not fully stripped: nsyms={symtab_nsyms}")
+if symtab is None:
+    raise SystemExit("Mach-O symbol table is missing")
+_, _, symoff, nsyms, _, _ = symtab
+if symoff + nsyms * 16 > len(executable):
+    raise SystemExit("Mach-O symbol entries exceed the executable size")
 
-print("Release verification passed: no plain API URL; Mach-O symbol table is empty")
+local_symbols = 0
+debug_symbols = 0
+for index in range(nsyms):
+    entry_offset = symoff + index * 16
+    _, n_type, _, _, _ = struct.unpack_from("<IBBHQ", executable, entry_offset)
+    if n_type & 0xE0:  # N_STAB debugging symbols
+        debug_symbols += 1
+    if not n_type & 0x01:  # N_EXT external/dynamic symbols must remain
+        local_symbols += 1
+
+if debug_symbols or local_symbols:
+    raise SystemExit(
+        f"Symbols were not stripped as expected: debug={debug_symbols}, local={local_symbols}"
+    )
+
+print(
+    f"Release verification passed: no plain API URL; no debug/local symbols; "
+    f"{nsyms} required dynamic symbols retained"
+)
