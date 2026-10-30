@@ -104,9 +104,14 @@ final class AppState: ObservableObject {
             notice = "跳转链接无效，请联系管理员检查配置"
             return
         }
-        Task {
-            let opened = await UIApplication.shared.open(url)
-            if !opened { notice = "无法打开跳转链接" }
+        Task { @MainActor [weak self] in
+            // 等公告弹窗完成关闭，避免 iOS 16 在弹窗切换期间丢弃外链打开请求。
+            try? await Task.sleep(nanoseconds: 350_000_000)
+            UIApplication.shared.open(url, options: [:]) { opened in
+                Task { @MainActor [weak self] in
+                    if !opened { self?.notice = "无法打开跳转链接，请检查系统浏览器是否可用" }
+                }
+            }
         }
     }
 
