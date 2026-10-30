@@ -10,7 +10,7 @@ if len(sys.argv) != 2:
     raise SystemExit("Usage: verify_release.py <app-executable>")
 
 executable = Path(sys.argv[1]).read_bytes()
-plain_url = b"https://dm.kingome.shop/api"
+plain_url = b"https://book.memetoday.cc/api"
 if plain_url in executable:
     raise SystemExit("Plain API URL is still present in the executable")
 
