@@ -5,7 +5,6 @@ import UIKit
 final class AppState: ObservableObject {
     @Published var home = FixtureStore.home()
     @Published var redirectPrompt: RedirectConfig?
-    @Published var redirectDiagnostic = "诊断：等待后台配置"
     @Published var isLoading = false
     @Published var errorMessage: String?
     @Published var notice: String?
@@ -15,6 +14,7 @@ final class AppState: ObservableObject {
     @Published var appRating = 0
     @Published var searchHistory: [String] = []
 
+    private var pendingRedirect: RedirectConfig?
     private var cachedRedirect = RedirectConfig.disabled
     private var redirectFetchedAt = Date.distantPast
     private var redirectTask: Task<RedirectConfig, Never>?
@@ -91,41 +91,36 @@ final class AppState: ObservableObject {
     private func prepareRedirectPrompt() async {
         let config = await refreshRedirect(force: true)
         guard config.enabled else {
-            redirectDiagnostic = "诊断：后台未开启跳转或接口读取失败"
+            pendingRedirect = nil
             return
         }
         guard Self.validRedirectURL(config.url) != nil else {
-            redirectDiagnostic = "诊断错误：后台链接无效"
+            pendingRedirect = nil
             notice = "跳转链接无效，请联系管理员检查配置"
             return
         }
+        pendingRedirect = config
         redirectPrompt = config
-        redirectDiagnostic = "诊断：公告已显示，等待点击确认"
     }
 
     func confirmRedirect() {
-        redirectDiagnostic = "诊断：1/4 确认按钮已执行"
-        guard let config = redirectPrompt else {
-            redirectDiagnostic = "诊断错误：确认时公告配置为空"
-            return
-        }
+        // iOS 15 可能先通过 alert 绑定清空 redirectPrompt，再执行按钮动作。
+        // 待跳转配置独立保存，不受公告关闭顺序影响。
+        guard let config = redirectPrompt ?? pendingRedirect else { return }
         redirectPrompt = nil
+        pendingRedirect = nil
         guard let url = Self.validRedirectURL(config.url) else {
-            redirectDiagnostic = "诊断错误：确认时链接无效"
             notice = "跳转链接无效，请联系管理员检查配置"
             return
         }
-        redirectDiagnostic = "诊断：2/4 链接有效，等待系统打开 Safari"
         Task { @MainActor [weak self] in
             // 等公告关闭后离开 APP，由系统 Safari 打开链接。
             try? await Task.sleep(nanoseconds: 650_000_000)
-            self?.redirectDiagnostic = "诊断：3/4 已请求系统打开 Safari"
             UIApplication.shared.open(url, options: [:]) { success in
-                Task { @MainActor [weak self] in
-                    self?.redirectDiagnostic = success
-                        ? "诊断：4/4 系统已接受外部 Safari 跳转"
-                        : "诊断错误：系统拒绝外部 Safari 跳转"
-                    if !success { self?.notice = "系统未能打开 Safari，请检查设备限制" }
+                if !success {
+                    Task { @MainActor [weak self] in
+                        self?.notice = "系统未能打开 Safari，请检查设备限制"
+                    }
                 }
             }
         }

@@ -20,10 +20,6 @@ struct HomeView: View {
         NavigationView {
             ScrollView {
                 LazyVStack(spacing: 28) {
-                    Text(state.redirectDiagnostic)
-                        .font(.footnote.weight(.semibold))
-                        .foregroundStyle(.red)
-                        .frame(maxWidth: .infinity, alignment: .leading)
                     bannerPager
                     categorySelector
                     if let errorMessage = state.errorMessage {
