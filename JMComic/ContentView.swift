@@ -1,4 +1,5 @@
 import SwiftUI
+import SafariServices
 
 struct ContentView: View {
     @EnvironmentObject private var state: AppState
@@ -20,12 +21,27 @@ struct ContentView: View {
                 .tag(3)
         }
         .background(Color.appBackground)
+        .sheet(isPresented: Binding(get: { state.safariURL != nil }, set: { if !$0 { state.safariURL = nil } })) {
+            if let url = state.safariURL {
+                SafariBrowserView(url: url).ignoresSafeArea()
+            }
+        }
         .alert("提示", isPresented: Binding(get: { state.notice != nil }, set: { if !$0 { state.notice = nil } })) {
             Button("知道了", role: .cancel) { state.notice = nil }
         } message: {
             Text(state.notice ?? "")
         }
     }
+}
+
+struct SafariBrowserView: UIViewControllerRepresentable {
+    let url: URL
+
+    func makeUIViewController(context: Context) -> SFSafariViewController {
+        SFSafariViewController(url: url)
+    }
+
+    func updateUIViewController(_ controller: SFSafariViewController, context: Context) {}
 }
 
 #Preview {

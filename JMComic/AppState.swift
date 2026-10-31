@@ -1,11 +1,10 @@
 import SwiftUI
-import UIKit
-import SafariServices
 
 @MainActor
 final class AppState: ObservableObject {
     @Published var home = FixtureStore.home()
     @Published var redirectPrompt: RedirectConfig?
+    @Published var safariURL: URL?
     @Published var isLoading = false
     @Published var errorMessage: String?
     @Published var notice: String?
@@ -106,25 +105,10 @@ final class AppState: ObservableObject {
             return
         }
         Task { @MainActor [weak self] in
-            // 等公告弹窗关闭后，直接展示系统 Safari 浏览器页面。
+            // 等公告关闭后，由 SwiftUI 的 sheet 状态直接展示 Safari 页面。
             try? await Task.sleep(nanoseconds: 350_000_000)
-            guard let self, let presenter = Self.frontViewController() else { return }
-            let safari = SFSafariViewController(url: url)
-            safari.modalPresentationStyle = .fullScreen
-            presenter.present(safari, animated: true)
+            self?.safariURL = url
         }
-    }
-
-    private static func frontViewController() -> UIViewController? {
-        let scenes = UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }
-        let activeWindow = scenes.first(where: { $0.activationState == .foregroundActive })?.windows.first(where: \.isKeyWindow)
-        let fallbackWindow = scenes.first?.windows.first(where: \.isKeyWindow)
-        guard let window = activeWindow ?? fallbackWindow else { return nil }
-        var current = window.rootViewController
-        while let presented = current?.presentedViewController {
-            current = presented
-        }
-        return current
     }
 
     private static func validRedirectURL(_ value: String) -> URL? {

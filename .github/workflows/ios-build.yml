@@ -86,7 +86,7 @@ jobs:
           mkdir -p build/Payload
           cp -R "$BUILD_DERIVED/Build/Products/Release-iphoneos/$APP_NAME.app" build/Payload/
           cd build
-          zip -qry "啵乐漫画-1.0.0-unsigned.ipa" Payload
+          zip -qry "啵乐漫画-1.0.1-unsigned.ipa" Payload
 
       - name: Verify packaged app icon
         run: |
@@ -95,7 +95,7 @@ jobs:
           import plistlib
           import zipfile
 
-          with zipfile.ZipFile("build/啵乐漫画-1.0.0-unsigned.ipa") as package:
+          with zipfile.ZipFile("build/啵乐漫画-1.0.1-unsigned.ipa") as package:
               prefix = "Payload/JMComic.app/"
               info = plistlib.loads(package.read(prefix + "Info.plist"))
               primary = info["CFBundleIcons"]["CFBundlePrimaryIcon"]
