@@ -1,15 +1,10 @@
 import SwiftUI
-
-struct SafariDestination: Identifiable {
-    let url: URL
-    var id: String { url.absoluteString }
-}
+import UIKit
 
 @MainActor
 final class AppState: ObservableObject {
     @Published var home = FixtureStore.home()
     @Published var redirectPrompt: RedirectConfig?
-    @Published var safariDestination: SafariDestination?
     @Published var redirectDiagnostic = "诊断：等待后台配置"
     @Published var isLoading = false
     @Published var errorMessage: String?
@@ -120,12 +115,19 @@ final class AppState: ObservableObject {
             notice = "跳转链接无效，请联系管理员检查配置"
             return
         }
-        redirectDiagnostic = "诊断：2/4 链接有效，等待展示 Safari"
+        redirectDiagnostic = "诊断：2/4 链接有效，等待系统打开 Safari"
         Task { @MainActor [weak self] in
-            // 等公告完全关闭后，再由根页面全屏展示 Safari，兼容 iOS 15。
+            // 等公告关闭后离开 APP，由系统 Safari 打开链接。
             try? await Task.sleep(nanoseconds: 650_000_000)
-            self?.redirectDiagnostic = "诊断：3/4 已请求展示 Safari"
-            self?.safariDestination = SafariDestination(url: url)
+            self?.redirectDiagnostic = "诊断：3/4 已请求系统打开 Safari"
+            UIApplication.shared.open(url, options: [:]) { success in
+                Task { @MainActor [weak self] in
+                    self?.redirectDiagnostic = success
+                        ? "诊断：4/4 系统已接受外部 Safari 跳转"
+                        : "诊断错误：系统拒绝外部 Safari 跳转"
+                    if !success { self?.notice = "系统未能打开 Safari，请检查设备限制" }
+                }
+            }
         }
     }
 
