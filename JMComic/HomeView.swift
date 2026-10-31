@@ -58,9 +58,6 @@ struct HomeView: View {
             .sheet(item: $selectedList) { configuration in
                 ComicListView(configuration: configuration)
             }
-            .alert("官方公告", isPresented: Binding(get: { state.redirectPrompt != nil }, set: { if !$0 { state.redirectPrompt = nil } })) {
-                Button("确认") { state.confirmRedirect() }
-            }
         }
     }
 

@@ -1,10 +1,15 @@
 import SwiftUI
 
+struct SafariDestination: Identifiable {
+    let url: URL
+    var id: String { url.absoluteString }
+}
+
 @MainActor
 final class AppState: ObservableObject {
     @Published var home = FixtureStore.home()
     @Published var redirectPrompt: RedirectConfig?
-    @Published var safariURL: URL?
+    @Published var safariDestination: SafariDestination?
     @Published var isLoading = false
     @Published var errorMessage: String?
     @Published var notice: String?
@@ -105,9 +110,9 @@ final class AppState: ObservableObject {
             return
         }
         Task { @MainActor [weak self] in
-            // 等公告关闭后，由 SwiftUI 的 sheet 状态直接展示 Safari 页面。
-            try? await Task.sleep(nanoseconds: 350_000_000)
-            self?.safariURL = url
+            // 等公告完全关闭后，再由根页面全屏展示 Safari，兼容 iOS 15。
+            try? await Task.sleep(nanoseconds: 650_000_000)
+            self?.safariDestination = SafariDestination(url: url)
         }
     }
 

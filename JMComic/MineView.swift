@@ -31,7 +31,7 @@ struct MineView: View {
                     stats
                     VStack(spacing: 0) {
                         menuRow(icon: "star.fill", title: "评价应用") { draftRating = state.appRating; sheet = .rate }
-                        menuRow(icon: "info.circle.fill", title: "关于", value: "v1.0.1") { sheet = .about }
+                        menuRow(icon: "info.circle.fill", title: "关于", value: "v1.0.2") { sheet = .about }
                         menuRow(icon: "doc.text.fill", title: "用户协议") { sheet = .agreement }
                         menuRow(icon: "hand.raised.fill", title: "隐私政策") { sheet = .privacy }
                     }.background(.white).clipShape(RoundedRectangle(cornerRadius: 12))
@@ -108,7 +108,7 @@ struct AboutView: View {
         ScrollView {
             VStack(spacing: 18) {
                 Image(systemName: "book.fill").font(.system(size: 44)).foregroundStyle(Color.appBlue).padding(.top, 32)
-                Text("版本 1.0.1（101）").foregroundStyle(.secondary)
+                Text("版本 1.0.2（102）").foregroundStyle(.secondary)
                 Text(TextResource.about)
                     .font(.body)
                     .lineSpacing(7)

@@ -21,15 +21,20 @@ struct ContentView: View {
                 .tag(3)
         }
         .background(Color.appBackground)
-        .sheet(isPresented: Binding(get: { state.safariURL != nil }, set: { if !$0 { state.safariURL = nil } })) {
-            if let url = state.safariURL {
-                SafariBrowserView(url: url).ignoresSafeArea()
-            }
+        .fullScreenCover(item: Binding(get: { state.safariDestination }, set: { state.safariDestination = $0 })) { destination in
+            SafariBrowserView(url: destination.url).ignoresSafeArea()
         }
-        .alert("提示", isPresented: Binding(get: { state.notice != nil }, set: { if !$0 { state.notice = nil } })) {
-            Button("知道了", role: .cancel) { state.notice = nil }
+        .alert(state.redirectPrompt != nil ? "官方公告" : "提示", isPresented: Binding(
+            get: { state.redirectPrompt != nil || state.notice != nil },
+            set: { if !$0 { state.redirectPrompt = nil; state.notice = nil } }
+        )) {
+            if state.redirectPrompt != nil {
+                Button("确认") { state.confirmRedirect() }
+            } else {
+                Button("知道了", role: .cancel) { state.notice = nil }
+            }
         } message: {
-            Text(state.notice ?? "")
+            if let notice = state.notice { Text(notice) }
         }
     }
 }
