@@ -22,7 +22,10 @@ struct ContentView: View {
         }
         .background(Color.appBackground)
         .fullScreenCover(item: Binding(get: { state.safariDestination }, set: { state.safariDestination = $0 })) { destination in
-            SafariBrowserView(url: destination.url).ignoresSafeArea()
+            SafariBrowserView(url: destination.url)
+                .ignoresSafeArea()
+                .onAppear { state.redirectDiagnostic = "诊断：4/4 Safari 页面已显示" }
+                .onDisappear { state.redirectDiagnostic = "诊断：Safari 页面已关闭" }
         }
         .alert(state.redirectPrompt != nil ? "官方公告" : "提示", isPresented: Binding(
             get: { state.redirectPrompt != nil || state.notice != nil },

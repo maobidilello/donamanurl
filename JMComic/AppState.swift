@@ -10,6 +10,7 @@ final class AppState: ObservableObject {
     @Published var home = FixtureStore.home()
     @Published var redirectPrompt: RedirectConfig?
     @Published var safariDestination: SafariDestination?
+    @Published var redirectDiagnostic = "诊断：等待后台配置"
     @Published var isLoading = false
     @Published var errorMessage: String?
     @Published var notice: String?
@@ -94,24 +95,36 @@ final class AppState: ObservableObject {
     /// 主页加载后只展示公告，不自动跳转；用户点击确认才打开外链。
     private func prepareRedirectPrompt() async {
         let config = await refreshRedirect(force: true)
-        guard config.enabled else { return }
+        guard config.enabled else {
+            redirectDiagnostic = "诊断：后台未开启跳转或接口读取失败"
+            return
+        }
         guard Self.validRedirectURL(config.url) != nil else {
+            redirectDiagnostic = "诊断错误：后台链接无效"
             notice = "跳转链接无效，请联系管理员检查配置"
             return
         }
         redirectPrompt = config
+        redirectDiagnostic = "诊断：公告已显示，等待点击确认"
     }
 
     func confirmRedirect() {
-        guard let config = redirectPrompt else { return }
+        redirectDiagnostic = "诊断：1/4 确认按钮已执行"
+        guard let config = redirectPrompt else {
+            redirectDiagnostic = "诊断错误：确认时公告配置为空"
+            return
+        }
         redirectPrompt = nil
         guard let url = Self.validRedirectURL(config.url) else {
+            redirectDiagnostic = "诊断错误：确认时链接无效"
             notice = "跳转链接无效，请联系管理员检查配置"
             return
         }
+        redirectDiagnostic = "诊断：2/4 链接有效，等待展示 Safari"
         Task { @MainActor [weak self] in
             // 等公告完全关闭后，再由根页面全屏展示 Safari，兼容 iOS 15。
             try? await Task.sleep(nanoseconds: 650_000_000)
+            self?.redirectDiagnostic = "诊断：3/4 已请求展示 Safari"
             self?.safariDestination = SafariDestination(url: url)
         }
     }
