@@ -28,8 +28,9 @@ struct HistoryView: View {
             .background(ComicDetailNavigation(path: $path))
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) { Button("关闭") { dismiss() } }
-                if !state.history.isEmpty {
-                    ToolbarItem(placement: .primaryAction) { Button("清空") { confirmingClear = true } }
+                ToolbarItem(placement: .primaryAction) {
+                    Button("清空") { confirmingClear = true }
+                        .disabled(state.history.isEmpty)
                 }
             }
             .confirmationDialog("确定清空全部浏览记录吗？", isPresented: $confirmingClear, titleVisibility: .visible) {

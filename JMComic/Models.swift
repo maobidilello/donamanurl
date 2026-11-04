@@ -77,13 +77,6 @@ struct ComicListResponse: Codable {
     var pageSize: Int?
 }
 
-struct RedirectConfig: Codable {
-    var enabled: Bool
-    var url: String
-
-    static let disabled = RedirectConfig(enabled: false, url: "")
-}
-
 enum SortMode: String, CaseIterable, Identifiable {
     case hot, rating, update
     var id: String { rawValue }

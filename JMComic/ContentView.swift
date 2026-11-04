@@ -20,10 +20,13 @@ struct ContentView: View {
                 .tag(3)
         }
         .background(Color.appBackground)
-        .alert("提示", isPresented: Binding(get: { state.notice != nil }, set: { if !$0 { state.notice = nil } })) {
+        .alert("提示", isPresented: Binding(
+            get: { state.notice != nil },
+            set: { if !$0 { state.notice = nil } }
+        )) {
             Button("知道了", role: .cancel) { state.notice = nil }
         } message: {
-            Text(state.notice ?? "")
+            if let notice = state.notice { Text(notice) }
         }
     }
 }

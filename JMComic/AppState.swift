@@ -1,10 +1,8 @@
 import SwiftUI
-import UIKit
 
 @MainActor
 final class AppState: ObservableObject {
     @Published var home = FixtureStore.home()
-    @Published var redirectPrompt: RedirectConfig?
     @Published var isLoading = false
     @Published var errorMessage: String?
     @Published var notice: String?
@@ -13,10 +11,6 @@ final class AppState: ObservableObject {
     @Published var ratings: [Int: Int] = [:]
     @Published var appRating = 0
     @Published var searchHistory: [String] = []
-
-    private var cachedRedirect = RedirectConfig.disabled
-    private var redirectFetchedAt = Date.distantPast
-    private var redirectTask: Task<RedirectConfig, Never>?
 
     init() {
         let defaults = UserDefaults.standard
@@ -27,13 +21,11 @@ final class AppState: ObservableObject {
         } ?? [:]
         appRating = defaults.integer(forKey: "appRating")
         searchHistory = defaults.stringArray(forKey: "searchHistory") ?? []
-        cachedRedirect = Self.read(RedirectConfig.self, key: "redirectConfig") ?? .disabled
         Task { await self.loadInitial() }
     }
 
     func loadInitial() async {
         await refreshHome()
-        await prepareRedirectPrompt()
     }
 
     func refreshHome(category: String = "全部") async {
@@ -62,60 +54,6 @@ final class AppState: ObservableObject {
 
     func detail(id: Int) async -> Comic? {
         FixtureStore.comic(id: id)
-    }
-
-    func refreshRedirect(force: Bool = false) async -> RedirectConfig {
-        if !force, Date().timeIntervalSince(redirectFetchedAt) < AppConfig.redirectCacheInterval {
-            return cachedRedirect
-        }
-        if let redirectTask { return await redirectTask.value }
-        let task = Task<RedirectConfig, Never> {
-            do {
-                let config = try await APIClient.shared.redirect()
-                Self.save(config, key: "redirectConfig")
-                return config
-            } catch {
-                // 离线或后台不可用时留在 APP 内，保证包内漫画和图片正常访问。
-                return .disabled
-            }
-        }
-        redirectTask = task
-        cachedRedirect = await task.value
-        redirectFetchedAt = Date()
-        redirectTask = nil
-        return cachedRedirect
-    }
-
-    /// 主页加载后只展示公告，不自动跳转；用户点击确认才打开外链。
-    private func prepareRedirectPrompt() async {
-        let config = await refreshRedirect(force: true)
-        guard config.enabled else { return }
-        guard Self.validRedirectURL(config.url) != nil else {
-            notice = "跳转链接无效，请联系管理员检查配置"
-            return
-        }
-        redirectPrompt = config
-    }
-
-    func confirmRedirect() {
-        guard let config = redirectPrompt else { return }
-        redirectPrompt = nil
-        guard let url = Self.validRedirectURL(config.url) else {
-            notice = "跳转链接无效，请联系管理员检查配置"
-            return
-        }
-        Task {
-            let opened = await UIApplication.shared.open(url)
-            if !opened { notice = "无法打开跳转链接" }
-        }
-    }
-
-    private static func validRedirectURL(_ value: String) -> URL? {
-        guard let url = URL(string: value),
-              let scheme = url.scheme?.lowercased(),
-              ["http", "https"].contains(scheme),
-              url.host?.isEmpty == false else { return nil }
-        return url
     }
 
     func toggleFavorite(_ comic: Comic) {
