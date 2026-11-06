@@ -14,8 +14,8 @@ jobs:
     timeout-minutes: 45
     env:
       PROJECT: JMComic.xcodeproj
-      SCHEME: JMComic
-      APP_NAME: JMComic
+      SCHEME: BoleReader
+      APP_NAME: BoleReader
 
     steps:
       - name: Check out source
@@ -54,7 +54,7 @@ jobs:
           mkdir -p build/Payload
           cp -R "$RUNNER_TEMP/offline-derived/Build/Products/Release-iphoneos/$APP_NAME.app" build/Payload/
           cd build
-          zip -qry "啵乐漫画-1.0.5-107-unsigned.ipa" Payload
+          zip -qry "啵乐阅读-1.0.5-108-unsigned.ipa" Payload
 
       - name: Verify packaged app
         run: |
@@ -63,21 +63,21 @@ jobs:
           import plistlib
           import zipfile
 
-          with zipfile.ZipFile("build/啵乐漫画-1.0.5-107-unsigned.ipa") as package:
-              prefix = "Payload/JMComic.app/"
+          with zipfile.ZipFile("build/啵乐阅读-1.0.5-108-unsigned.ipa") as package:
+              prefix = "Payload/BoleReader.app/"
               info = plistlib.loads(package.read(prefix + "Info.plist"))
               assert info["CFBundleShortVersionString"] == "1.0.5"
-              assert info["CFBundleVersion"] == "107"
+              assert info["CFBundleVersion"] == "108"
               primary = info["CFBundleIcons"]["CFBundlePrimaryIcon"]
               assert primary["CFBundleIconName"] == "AppIcon"
               assert package.getinfo(prefix + "Assets.car").file_size > 0
-              print("Offline package verified: version 1.0.5, build 107, AppIcon present")
+              print("Offline package verified: version 1.0.5, build 108, AppIcon present")
           PY
 
       - name: Upload unsigned IPA
         uses: actions/upload-artifact@v4
         with:
-          name: JMComic-unsigned-ipa
+          name: BoleReader-unsigned-ipa
           path: build/*.ipa
           if-no-files-found: error
           retention-days: 14
@@ -86,7 +86,7 @@ jobs:
         if: failure()
         uses: actions/upload-artifact@v4
         with:
-          name: JMComic-build-logs
+          name: BoleReader-build-logs
           path: ${{ runner.temp }}/offline-build.log
           if-no-files-found: warn
           retention-days: 7

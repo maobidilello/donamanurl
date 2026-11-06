@@ -12,11 +12,11 @@ jobs:
     timeout-minutes: 45
     env:
       PROJECT: JMComic.xcodeproj
-      SCHEME: JMComic
-      APP_NAME: JMComic
+      SCHEME: BoleReader
+      APP_NAME: BoleReader
       TEAM_ID: PC7MX37P2C
-      BUNDLE_ID: com.jmantang.comic
-      PROFILE_NAME: Bole Comic App Store
+      BUNDLE_ID: com.bole.reader
+      PROFILE_NAME: Bole Reader App Store
 
     steps:
       - name: Check out source
@@ -59,7 +59,7 @@ jobs:
             -configuration Release \
             -destination 'generic/platform=iOS' \
             -derivedDataPath "$RUNNER_TEMP/app-store-derived" \
-            -archivePath build/JMComic.xcarchive \
+            -archivePath build/BoleReader.xcarchive \
             DEVELOPMENT_TEAM="$TEAM_ID" \
             CODE_SIGN_STYLE=Manual \
             CODE_SIGN_IDENTITY="Apple Distribution" \
@@ -87,8 +87,8 @@ jobs:
             <string>PC7MX37P2C</string>
             <key>provisioningProfiles</key>
             <dict>
-              <key>com.jmantang.comic</key>
-              <string>Bole Comic App Store</string>
+              <key>com.bole.reader</key>
+              <string>Bole Reader App Store</string>
             </dict>
             <key>stripSwiftSymbols</key>
             <true/>
@@ -97,7 +97,7 @@ jobs:
           PLIST
           xcodebuild \
             -exportArchive \
-            -archivePath build/JMComic.xcarchive \
+            -archivePath build/BoleReader.xcarchive \
             -exportOptionsPlist build/ExportOptions.plist \
             -exportPath build/export | tee "$RUNNER_TEMP/app-store-export.log"
 
@@ -137,7 +137,7 @@ jobs:
         if: success()
         uses: actions/upload-artifact@v4
         with:
-          name: JMComic-app-store-signed-ipa
+          name: BoleReader-app-store-signed-ipa
           path: build/export/*.ipa
           if-no-files-found: error
           retention-days: 7
@@ -146,7 +146,7 @@ jobs:
         if: failure()
         uses: actions/upload-artifact@v4
         with:
-          name: JMComic-app-store-failure-logs
+          name: BoleReader-app-store-failure-logs
           path: |
             ${{ runner.temp }}/app-store-archive.log
             ${{ runner.temp }}/app-store-export.log

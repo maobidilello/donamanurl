@@ -18,6 +18,12 @@ forbidden_markers = [
     b"confirmRedirect",
     "官方公告".encode("utf-8"),
     "跳转链接".encode("utf-8"),
+    "啵乐漫画极速版".encode("utf-8"),
+    "啵乐漫画".encode("utf-8"),
+    b"com.jmantang.comic",
+    b"dm.kingome.shop",
+    b"/uploads/",
+    b"JMComic/JMComic/",
 ]
 found = [marker.decode("utf-8", "replace") for marker in forbidden_markers if marker in executable]
 if found:
