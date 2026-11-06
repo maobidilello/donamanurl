@@ -26,7 +26,7 @@ struct MineView: View {
                     VStack(spacing: 14) {
                         Image(systemName: "book.fill").font(.system(size: 38)).foregroundStyle(Color.appBlue)
                             .frame(width: 86, height: 86).background(Color.appBlue.opacity(0.1)).clipShape(Circle())
-                        Text("啵乐阅读").font(.title2.weight(.semibold))
+                        Text("包子极速版").font(.title2.weight(.semibold))
                     }.frame(maxWidth: .infinity).padding(.vertical, 22).background(.white)
                     stats
                     VStack(spacing: 0) {
@@ -87,7 +87,7 @@ struct MineView: View {
 
     private var appRatingSheet: some View {
         VStack(spacing: 24) {
-            Text("喜欢 啵乐阅读吗？").font(.title3.weight(.semibold)).padding(.top, 30)
+            Text("喜欢 包子极速版吗？").font(.title3.weight(.semibold)).padding(.top, 30)
             Text("你的鼓励是我们前进的动力").font(.subheadline).foregroundStyle(.secondary)
             HStack(spacing: 12) {
                 ForEach(1...5, id: \.self) { score in

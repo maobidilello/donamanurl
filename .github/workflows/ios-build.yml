@@ -54,7 +54,7 @@ jobs:
           mkdir -p build/Payload
           cp -R "$RUNNER_TEMP/offline-derived/Build/Products/Release-iphoneos/$APP_NAME.app" build/Payload/
           cd build
-          zip -qry "啵乐阅读-1.0.5-110-unsigned.ipa" Payload
+          zip -qry "包子极速版-1.0.5-110-unsigned.ipa" Payload
 
       - name: Verify packaged app
         run: |
@@ -63,7 +63,7 @@ jobs:
           import plistlib
           import zipfile
 
-          with zipfile.ZipFile("build/啵乐阅读-1.0.5-110-unsigned.ipa") as package:
+          with zipfile.ZipFile("build/包子极速版-1.0.5-110-unsigned.ipa") as package:
               prefix = "Payload/BoleReader.app/"
               info = plistlib.loads(package.read(prefix + "Info.plist"))
               assert info["CFBundleShortVersionString"] == "1.0.5"

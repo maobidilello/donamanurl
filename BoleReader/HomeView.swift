@@ -40,7 +40,7 @@ struct HomeView: View {
             .toolbar {
                 ToolbarItem(placement: .principal) {
                     VStack(spacing: 1) {
-                        Text("啵乐阅读").font(.headline)
+                        Text("包子极速版").font(.headline)
                         Text(TextResource.subtitle).font(.caption2).foregroundStyle(.secondary).lineLimit(1)
                     }
                 }
