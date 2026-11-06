@@ -108,7 +108,7 @@ struct AboutView: View {
         ScrollView {
             VStack(spacing: 18) {
                 Image(systemName: "book.fill").font(.system(size: 44)).foregroundStyle(Color.appBlue).padding(.top, 32)
-                Text("版本 1.0.5（105）").foregroundStyle(.secondary)
+                Text("版本 1.0.5（109）").foregroundStyle(.secondary)
                 Text(TextResource.about)
                     .font(.body)
                     .lineSpacing(7)

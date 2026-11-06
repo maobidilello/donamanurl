@@ -10,7 +10,7 @@ enum FixtureStore {
         return books
     }()
 
-    static let categories = ["科幻", "都市", "奇幻", "治愈", "武侠", "冒险", "悬疑"].enumerated().map {
+    static let categories = ["冒险", "恋爱", "修真", "搞笑", "后宫"].enumerated().map {
         BookCategory(id: $0.offset + 1, name: $0.element, sort: $0.offset + 1)
     }
 
