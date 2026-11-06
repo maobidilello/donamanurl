@@ -15,8 +15,7 @@ enum FixtureStore {
     }
 
     static let banners = [
-        BookBanner(id: 1, title: "精选推荐一", image: "review-banner1", bookID: 1, sort: 1, enabled: 1),
-        BookBanner(id: 2, title: "精选推荐二", image: "review-banner2", bookID: 2, sort: 2, enabled: 1),
+        BookBanner(id: 1, title: "精选推荐", image: "review-banner2", bookID: 2, sort: 1, enabled: 1),
     ]
 
     static func home(category: String = "全部") -> HomeResponse {

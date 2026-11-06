@@ -54,7 +54,7 @@ jobs:
           mkdir -p build/Payload
           cp -R "$RUNNER_TEMP/offline-derived/Build/Products/Release-iphoneos/$APP_NAME.app" build/Payload/
           cd build
-          zip -qry "啵乐阅读-1.0.5-109-unsigned.ipa" Payload
+          zip -qry "啵乐阅读-1.0.5-110-unsigned.ipa" Payload
 
       - name: Verify packaged app
         run: |
@@ -63,15 +63,15 @@ jobs:
           import plistlib
           import zipfile
 
-          with zipfile.ZipFile("build/啵乐阅读-1.0.5-109-unsigned.ipa") as package:
+          with zipfile.ZipFile("build/啵乐阅读-1.0.5-110-unsigned.ipa") as package:
               prefix = "Payload/BoleReader.app/"
               info = plistlib.loads(package.read(prefix + "Info.plist"))
               assert info["CFBundleShortVersionString"] == "1.0.5"
-              assert info["CFBundleVersion"] == "109"
+              assert info["CFBundleVersion"] == "110"
               primary = info["CFBundleIcons"]["CFBundlePrimaryIcon"]
               assert primary["CFBundleIconName"] == "AppIcon"
               assert package.getinfo(prefix + "Assets.car").file_size > 0
-              print("Offline package verified: version 1.0.5, build 109, AppIcon present")
+              print("Offline package verified: version 1.0.5, build 110, AppIcon present")
           PY
 
       - name: Upload unsigned IPA

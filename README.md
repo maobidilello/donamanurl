@@ -45,7 +45,7 @@
 
 将本目录作为 GitHub 仓库根目录后，打开 Actions → iOS Offline Build → Run workflow，或推送 `main` 分支触发。工作流直接编译原始源码，不做代码混淆，也不自动签名上传。
 
-构建成功后可在 Artifacts 下载 `BoleReader-unsigned-ipa`，其中包含 `啵乐阅读-1.0.5-109-unsigned.ipa`。该 IPA 未签名，不能直接安装或提交 App Store。
+构建成功后可在 Artifacts 下载 `BoleReader-unsigned-ipa`，其中包含 `啵乐阅读-1.0.5-110-unsigned.ipa`。该 IPA 未签名，不能直接安装或提交 App Store。
 
 ## 静态检查
 
